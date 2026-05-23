@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DSA Progress Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f172a;--card:#1e293b;--border:#334155;--border2:#475569;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --purple:#7c3aed;--purple2:#6d28d9;
+  --blue:#3b82f6;--green:#10b981;--amber:#f59e0b;--red:#ef4444;
+  --lc-orange:#ffa116;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:hidden}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+button{cursor:pointer;border:none;font-family:inherit;font-size:13px}
+input,textarea,select{font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 10px;outline:none;transition:border-color .15s}
+input:focus,textarea:focus,select:focus{border-color:var(--purple)}
+textarea{resize:vertical}
+
+/* ── Layout ── */
+#nav{width:224px;flex-shrink:0;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh}
+#main{flex:1;display:flex;overflow:hidden;height:100vh}
+#content{flex:1;overflow-y:auto;padding:28px 32px}
+#sidebar{width:276px;flex-shrink:0;background:var(--card);border-left:1px solid var(--border);overflow-y:auto;padding:20px;display:none}
+
+/* ── Nav ── */
+.nav-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.nav-logo .brand{font-size:15px;font-weight:700;color:var(--text)}
+.nav-logo .sub{font-size:11px;color:var(--text3);margin-top:2px}
+.nav-links{padding:10px 8px;flex:1;overflow-y:auto}
+.nav-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;user-select:none;margin-bottom:2px}
+.nav-link:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.nav-link.active{background:rgba(124,58,237,.15);color:#c4b5fd;font-weight:600}
+.nav-link svg{flex-shrink:0;width:16px;height:16px;opacity:.75}
+.nav-link .lc-dot{width:8px;height:8px;border-radius:50%;background:var(--lc-orange);flex-shrink:0}
+.nav-lc-badge{font-size:9px;margin-left:auto;background:rgba(255,161,22,.15);color:var(--lc-orange);border:1px solid rgba(255,161,22,.3);padding:1px 6px;border-radius:9999px;font-weight:700}
+.nav-user{padding:12px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04);cursor:pointer}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.uname{font-size:12px;font-weight:600;color:var(--text)}
+.uemail{font-size:10px;color:var(--text3)}
+
+/* ── Pages ── */
+.page{display:none}.page.active{display:block}
+.page-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.page-sub{font-size:13px;color:var(--text3);margin-top:4px;margin-bottom:22px}
+
+/* ── Stat cards ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.stat-val{font-size:26px;font-weight:800;line-height:1;letter-spacing:-.5px}
+.stat-val.v{color:#a78bfa}.stat-val.b{color:#60a5fa}.stat-val.g{color:#34d399}.stat-val.a{color:#fbbf24}.stat-val.o{color:var(--lc-orange)}
+.stat-label{font-size:10px;color:var(--text3);margin-top:5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ── Section cards ── */
+.sc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px}
+.sc-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+
+/* ── Difficulty rings ── */
+.diff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.diff-item{text-align:center}
+.diff-label{font-size:12px;font-weight:700;margin-bottom:8px}
+.diff-label.e{color:var(--green)}.diff-label.m{color:var(--amber)}.diff-label.h{color:var(--red)}
+.diff-ring{position:relative;width:68px;height:68px;margin:0 auto 6px}
+.diff-ring svg{transform:rotate(-90deg)}
+.diff-ring-c{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--text)}
+.diff-count{font-size:11px;color:var(--text3)}
+
+/* ── Topic bars ── */
+.tbar{margin-bottom:12px}
+.tbar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.tbar-name{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text)}
+.tbar-stats{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text3)}
+.tbar-pct{font-weight:700;color:var(--text2)}
+.tbar-track{height:5px;background:rgba(255,255,255,.07);border-radius:9999px;overflow:hidden}
+.tbar-fill{height:100%;border-radius:9999px;transition:width .6s ease;background:linear-gradient(90deg,#6d28d9,#7c3aed)}
+.tbar-fill.done{background:linear-gradient(90deg,#059669,#10b981)}
+
+/* ── LeetCode panel ── */
+.lc-panel{background:linear-gradient(135deg,rgba(255,161,22,.06),rgba(255,161,22,.02));border:1px solid rgba(255,161,22,.2);border-radius:12px;padding:18px;margin-bottom:16px}
+.lc-panel-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.lc-logo{font-size:18px}
+.lc-panel-title{font-size:13px;font-weight:700;color:var(--text)}
+.lc-panel-user{font-size:11px;color:var(--lc-orange);font-weight:600}
+.lc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.lc-stat{background:rgba(255,161,22,.06);border:1px solid rgba(255,161,22,.12);border-radius:8px;padding:10px;text-align:center}
+.lc-stat-val{font-size:20px;font-weight:800;color:var(--lc-orange)}
+.lc-stat-label{font-size:10px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+.lc-sync-bar{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,161,22,.15)}
+.lc-sync-info{font-size:11px;color:var(--text3);flex:1}
+.lc-sync-info strong{color:var(--text2)}
+.lc-matched-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#34d399;font-size:10px;font-weight:700;padding:2px 8px;border-radius:9999px}
+.lc-not-connected{text-align:center;padding:18px}
+.lc-not-connected .icon{font-size:28px;margin-bottom:8px}
+.lc-not-connected p{font-size:12px;color:var(--text3);line-height:1.6}
+
+/* ── Problems page ── */
+.filter-row{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+.filter-row input{flex:1;min-width:180px}
+.btn-group{display:flex;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0}
+.btn-group button{padding:7px 12px;background:transparent;color:var(--text2);border:none;font-size:11px;font-weight:600;transition:all .15s;white-space:nowrap}
+.btn-group button.active{background:var(--purple);color:#fff}
+.btn-group button:hover:not(.active){background:rgba(255,255,255,.05);color:var(--text)}
+
+.tsec{margin-bottom:10px}
+.tsec-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:9px;cursor:pointer;user-select:none;transition:border-color .15s}
+.tsec-header:hover{border-color:var(--border2)}
+.tsec-header.open{border-radius:9px 9px 0 0;border-bottom-color:rgba(255,255,255,.04)}
+.tsec-left{display:flex;align-items:center;gap:9px}
+.tsec-mini{width:72px;height:3px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.tsec-mini-fill{height:100%;border-radius:3px;background:#7c3aed}
+.tsec-chev{color:var(--text3);font-size:11px;transition:transform .2s}
+.tsec-chev.open{transform:rotate(180deg)}
+.tsec-body{border:1px solid var(--border);border-top:none;border-radius:0 0 9px 9px;overflow:hidden}
+
+.qrow{display:flex;align-items:center;gap:9px;padding:8px 13px;border-bottom:1px solid rgba(255,255,255,.03);transition:background .1s}
+.qrow:last-child{border-bottom:none}
+.qrow:hover{background:rgba(255,255,255,.025)}
+.qnum{font-size:10px;color:var(--text3);width:30px;flex-shrink:0;font-family:monospace}
+.qtitle{flex:1;min-width:0}
+.qtitle a{font-size:13px;color:var(--text2);transition:color .15s}
+.qtitle a:hover{color:#a78bfa;text-decoration:none}
+.qtitle.solved a{color:var(--text3);text-decoration:line-through}
+.qtags{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
+.qtag{font-size:9px;background:rgba(255,255,255,.05);color:var(--text3);padding:1px 5px;border-radius:3px}
+.lc-synced-dot{width:6px;height:6px;border-radius:50%;background:var(--lc-orange);flex-shrink:0;title:"Synced from LeetCode"}
+
+.diff-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:9999px;flex-shrink:0}
+.diff-badge.Easy{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.22)}
+.diff-badge.Medium{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.22)}
+.diff-badge.Hard{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.22)}
+
+.sbtn{font-size:9px;font-weight:700;padding:3px 8px;border-radius:5px;transition:all .15s;flex-shrink:0;min-width:80px;text-align:center;border:1px solid}
+.sbtn.Todo{background:rgba(255,255,255,.05);color:var(--text3);border-color:var(--border)}
+.sbtn.Todo:hover{background:rgba(255,255,255,.09);color:var(--text2)}
+.sbtn.In-Progress{background:rgba(59,130,246,.12);color:#93c5fd;border-color:rgba(59,130,246,.28)}
+.sbtn.Solved{background:rgba(124,58,237,.12);color:#c4b5fd;border-color:rgba(124,58,237,.28)}
+.sbtn.lc-solved{background:rgba(255,161,22,.12);color:var(--lc-orange);border-color:rgba(255,161,22,.28)}
+
+.icon-btn{font-size:11px;padding:3px 7px;background:transparent;color:var(--text3);border:1px solid transparent;border-radius:5px;transition:all .15s}
+.icon-btn:hover{background:rgba(255,255,255,.06);color:var(--text2);border-color:var(--border)}
+.icon-btn.amber{color:#fbbf24}
+.icon-btn.active-rec{color:#a78bfa;background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.3)}
+
+.notes-panel{padding:9px 13px;background:rgba(255,255,255,.015);border-top:1px solid rgba(255,255,255,.04)}
+.notes-panel textarea{width:100%;background:var(--bg);font-size:12px;padding:7px 9px;min-height:64px}
+.notes-actions{display:flex;gap:7px;margin-top:5px;justify-content:flex-end}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;transition:all .15s;cursor:pointer;border:none}
+.btn-primary{background:var(--purple);color:#fff}.btn-primary:hover{background:var(--purple2)}
+.btn-lc{background:rgba(255,161,22,.15);color:var(--lc-orange);border:1px solid rgba(255,161,22,.3)}.btn-lc:hover{background:rgba(255,161,22,.25)}
+.btn-secondary{background:rgba(255,255,255,.07);color:var(--text2);border:1px solid var(--border)}.btn-secondary:hover{background:rgba(255,255,255,.11);color:var(--text)}
+.btn-danger{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}.btn-danger:hover{background:rgba(239,68,68,.2)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px;border-radius:5px}
+
+/* ── Sidebar ── */
+.sb-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.sb-sub{font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.5}
+.rec-card{border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:9px;cursor:pointer;transition:border-color .15s}
+.rec-card:hover{border-color:rgba(124,58,237,.4)}
+.rec-card-n{font-size:9px;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em}
+.rec-card-t{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;line-height:1.35}
+.rec-card:hover .rec-card-t{color:#c4b5fd}
+.rec-card-m{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.rec-src{font-size:11px;color:var(--text3);margin-bottom:9px;padding:7px 9px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--border);line-height:1.4}
+
+/* ── LeetCode Sync page ── */
+.lc-connect-card{background:linear-gradient(135deg,rgba(255,161,22,.07),rgba(255,161,22,.02));border:1px solid rgba(255,161,22,.22);border-radius:14px;padding:28px;text-align:center;margin-bottom:20px}
+.lc-connect-icon{font-size:44px;margin-bottom:12px}
+.lc-connect-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px}
+.lc-connect-desc{font-size:13px;color:var(--text3);line-height:1.6;max-width:480px;margin:0 auto 20px}
+.lc-input-row{display:flex;gap:10px;max-width:420px;margin:0 auto}
+.lc-input-row input{flex:1}
+.lc-status{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:14px}
+.lc-status.ok{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:#34d399}
+.lc-status.err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171}
+.lc-status.loading{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);color:#93c5fd}
+.lc-profile-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px}
+.lc-profile-top{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.lc-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,rgba(255,161,22,.3),rgba(255,161,22,.1));border:2px solid rgba(255,161,22,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.lc-user-info .name{font-size:16px;font-weight:700;color:var(--text)}
+.lc-user-info .handle{font-size:12px;color:var(--lc-orange);font-weight:600}
+.lc-user-info .rank{font-size:11px;color:var(--text3);margin-top:3px}
+.lc-breakdown{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.lc-bd-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center}
+.lc-bd-val{font-size:20px;font-weight:800}
+.lc-bd-val.total{color:var(--lc-orange)}
+.lc-bd-val.e{color:var(--green)}.lc-bd-val.m{color:var(--amber)}.lc-bd-val.h{color:var(--red)}
+.lc-bd-label{font-size:10px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+.lc-matched-info{background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:12px;font-size:12px;color:var(--text2);line-height:1.6}
+.lc-matched-info strong{color:#c4b5fd}
+.lc-solved-list{margin-top:16px}
+.lc-solved-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.lc-solved-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(255,161,22,.08);border:1px solid rgba(255,161,22,.18);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text2);margin:3px;cursor:pointer;transition:border-color .15s}
+.lc-solved-chip:hover{border-color:rgba(255,161,22,.4)}
+.lc-solved-chip .num{color:var(--lc-orange);font-weight:700;font-family:monospace;font-size:10px}
+.lc-tag-wrap{max-height:280px;overflow-y:auto}
+
+/* ── Settings ── */
+.set-sec{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.set-title{font-size:13px;font-weight:700;margin-bottom:12px}
+.form-row{margin-bottom:12px}
+.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:block;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.form-row input,.form-row select{width:100%}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:13px;color:var(--text)}
+.toggle-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.toggle{position:relative;width:38px;height:21px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border2);border-radius:10px;transition:.2s;cursor:pointer}
+.toggle-slider:before{content:'';position:absolute;width:15px;height:15px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--purple)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(17px)}
+.user-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.user-chip{padding:5px 12px;border-radius:7px;font-size:12px;font-weight:600;background:rgba(255,255,255,.05);color:var(--text2);border:1px solid var(--border);cursor:pointer;transition:all .15s}
+.user-chip.active{background:rgba(124,58,237,.18);color:#c4b5fd;border-color:rgba(124,58,237,.4)}
+.user-chip:hover:not(.active){background:rgba(255,255,255,.09)}
+.info-list{list-style:none}
+.info-list li{display:flex;gap:8px;font-size:12px;color:var(--text3);padding:4px 0}
+
+/* ── Modals ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:#1e293b;border:1px solid var(--border);border-radius:14px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:transparent;color:var(--text3);font-size:17px;padding:2px 6px;border-radius:4px;border:none}
+.modal-close:hover{color:var(--text);background:rgba(255,255,255,.08)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+
+/* ── Misc ── */
+.toast{position:fixed;bottom:22px;right:22px;padding:11px 17px;border-radius:9px;font-size:13px;font-weight:600;z-index:9999;transform:translateY(80px);transition:transform .3s ease;pointer-events:none}
+.toast.show{transform:translateY(0)}
+.toast.success{background:#059669;color:#fff}
+.toast.error{background:#dc2626;color:#fff}
+.toast.info{background:#2563eb;color:#fff}
+.empty{text-align:center;padding:44px 20px;color:var(--text3)}
+.empty-icon{font-size:32px;margin-bottom:9px}
+.empty-title{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.streak-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#fbbf24;padding:3px 10px;border-radius:9999px;font-size:12px;font-weight:700}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:9999px}
+.badge-green{background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.2)}
+.badge-orange{background:rgba(255,161,22,.1);color:var(--lc-orange);border:1px solid rgba(255,161,22,.2)}
+.badge-purple{background:rgba(124,58,237,.12);color:#c4b5fd;border:1px solid rgba(124,58,237,.25)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">
+    <div class="brand">⚡ DSA Tracker</div>
+    <div class="sub">Progress &amp; Practice</div>
+  </div>
+  <div class="nav-links">
+    <div class="nav-link active" data-page="dashboard" onclick="showPage('dashboard')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-link" data-page="problems" onclick="showPage('problems')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>
+      Problems
+    </div>
+    <div class="nav-link" data-page="leetcode" onclick="showPage('leetcode')">
+      <div class="lc-dot"></div>
+      LeetCode Sync
+      <span class="nav-lc-badge" id="lc-nav-badge" style="display:none">Live</span>
+    </div>
+    <div class="nav-link" data-page="settings" onclick="showPage('settings')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </div>
+  </div>
+  <div class="nav-user">
+    <div class="user-card" onclick="showPage('settings')">
+      <div class="user-avatar" id="nav-avatar">DC</div>
+      <div>
+        <div class="uname" id="nav-uname">demo_coder</div>
+        <div class="uemail" id="nav-uemail">demo@dsa.com</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+<div id="content">
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div id="page-dashboard" class="page active">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div style="font-size:13px;color:var(--text3);margin-top:3px">Welcome back, <span id="dash-uname" style="color:#a78bfa;font-weight:600">demo_coder</span></div>
+    </div>
+    <div class="streak-badge" id="streak-display">🔥 0 day streak</div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-val v" id="s-solved">0</div><div class="stat-label">Solved</div><div class="stat-sub" id="s-solved-sub">of 0 total</div></div>
+    <div class="stat-card"><div class="stat-val b" id="s-inprog">0</div><div class="stat-label">In Progress</div><div class="stat-sub">currently active</div></div>
+    <div class="stat-card"><div class="stat-val g" id="s-week">0</div><div class="stat-label">This Week</div><div class="stat-sub">solved last 7 days</div></div>
+    <div class="stat-card"><div class="stat-val a" id="s-streak">0🔥</div><div class="stat-label">Best Streak</div><div class="stat-sub" id="s-streak-sub">days</div></div>
+  </div>
+
+  <!-- LeetCode panel (shown when connected) -->
+  <div id="dash-lc-panel" style="display:none" class="lc-panel">
+    <div class="lc-panel-header">
+      <div class="lc-logo">🟧</div>
+      <div>
+        <div class="lc-panel-title">LeetCode Stats</div>
+        <div class="lc-panel-user" id="dash-lc-user"></div>
+      </div>
+      <button class="btn btn-lc btn-sm" style="margin-left:auto" onclick="syncLeetCode(true)">↻ Sync</button>
+    </div>
+    <div class="lc-stats">
+      <div class="lc-stat"><div class="lc-stat-val" id="dlc-total">—</div><div class="lc-stat-label">Total Solved</div></div>
+      <div class="lc-stat" style="border-color:rgba(16,185,129,.2)"><div class="lc-stat-val" style="color:var(--green)" id="dlc-easy">—</div><div class="lc-stat-label">Easy</div></div>
+      <div class="lc-stat" style="border-color:rgba(245,158,11,.2)"><div class="lc-stat-val" style="color:var(--amber)" id="dlc-med">—</div><div class="lc-stat-label">Medium</div></div>
+      <div class="lc-stat" style="border-color:rgba(239,68,68,.2)"><div class="lc-stat-val" style="color:var(--red)" id="dlc-hard">—</div><div class="lc-stat-label">Hard</div></div>
+    </div>
+    <div class="lc-sync-bar">
+      <div class="lc-sync-info" id="dlc-sync-info">Last synced: never</div>
+      <span class="lc-matched-badge" id="dlc-matched" style="display:none">✓ 0 matched</span>
+    </div>
+  </div>
+  <!-- LeetCode not connected nudge -->
+  <div id="dash-lc-nudge" class="sc" style="display:none">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:24px">🟧</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Connect LeetCode</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">Sync your solved problems and track real LeetCode progress here</div>
+      </div>
+      <button class="btn btn-lc btn-sm" onclick="showPage('leetcode')">Connect →</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="sc">
+      <div class="sc-title">Difficulty Breakdown</div>
+      <div class="diff-grid" id="diff-grid"></div>
+    </div>
+    <div class="sc" style="grid-column:1/-1">
+      <div class="sc-title">
+        Progress by Topic
+        <span style="font-size:11px;color:var(--text3);font-weight:400" id="topic-bars-sub"></span>
+      </div>
+      <div id="topic-bars"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PROBLEMS ══════════ -->
+<div id="page-problems" class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+    <div>
+      <div class="page-title">Problem Sets</div>
+      <div class="page-sub" id="prob-sub">0 problems across 0 topics</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-lc btn-sm" onclick="showPage('leetcode')" id="prob-lc-btn">🟧 LeetCode Sync</button>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Problem</button>
+    </div>
+  </div>
+  <div class="filter-row">
+    <input type="text" id="search-input" placeholder="Search problems…" oninput="renderProblems()">
+    <div class="btn-group">
+      <button class="active" onclick="setFilter('diff','All',this)">All</button>
+      <button onclick="setFilter('diff','Easy',this)">Easy</button>
+      <button onclick="setFilter('diff','Medium',this)">Medium</button>
+      <button onclick="setFilter('diff','Hard',this)">Hard</button>
+    </div>
+    <div class="btn-group">
+      <button class="active" onclick="setFilter('status','All',this)">All</button>
+      <button onclick="setFilter('status','Todo',this)">Todo</button>
+      <button onclick="setFilter('status','In Progress',this)">Active</button>
+      <button onclick="setFilter('status','Solved',this)">Solved</button>
+    </div>
+    <div class="btn-group">
+      <button class="active" onclick="setFilter('source','All',this)">All</button>
+      <button onclick="setFilter('source','LeetCode Synced',this)">🟧 Synced</button>
+    </div>
+  </div>
+  <div id="topic-sections"></div>
+</div>
+
+<!-- ══════════ LEETCODE SYNC ══════════ -->
+<div id="page-leetcode" class="page">
+  <div class="page-title">🟧 LeetCode Sync</div>
+  <div class="page-sub" id="lc-page-sub">Connect your LeetCode account to automatically track your solved problems</div>
+
+  <!-- Not connected: connect card -->
+  <div id="lc-connect-section">
+    <div class="lc-connect-card">
+      <div class="lc-connect-icon">🟧</div>
+      <div class="lc-connect-title">Connect your LeetCode account</div>
+      <div class="lc-connect-desc">Enter your LeetCode username to fetch your public profile stats and solved problems. Your data is fetched via LeetCode's public GraphQL API and stored only in your browser.</div>
+      <div class="lc-input-row">
+        <input type="text" id="lc-username-input" placeholder="your-leetcode-username" onkeydown="if(event.key==='Enter')connectLeetCode()">
+        <button class="btn btn-lc" onclick="connectLeetCode()" id="lc-connect-btn">Connect</button>
+      </div>
+      <div id="lc-connect-status" style="margin-top:12px;max-width:420px;margin-left:auto;margin-right:auto"></div>
+    </div>
+    <div class="sc">
+      <div class="sc-title">How it works</div>
+      <ul class="info-list" style="margin-top:4px">
+        <li><span>1️⃣</span><span>Enter your public LeetCode username and click Connect</span></li>
+        <li><span>2️⃣</span><span>Your total solved count, difficulty breakdown, and recent submissions are fetched</span></li>
+        <li><span>3️⃣</span><span>Problems you've solved on LeetCode are automatically matched to this tracker's list and marked as Solved</span></li>
+        <li><span>4️⃣</span><span>Hit "Sync" anytime to pull the latest data from LeetCode</span></li>
+        <li><span>🔒</span><span>Only public profile data is accessed — no login or password required</span></li>
+        <li><span>⚠️</span><span>LeetCode's API may be blocked by browser CORS in some environments. Use a CORS proxy or open the file locally for best results.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Connected: profile + stats -->
+  <div id="lc-profile-section" style="display:none">
+    <div class="lc-profile-card">
+      <div class="lc-profile-top">
+        <div class="lc-avatar" id="lc-av-icon">🧑</div>
+        <div class="lc-user-info">
+          <div class="name" id="lc-realname">—</div>
+          <div class="handle" id="lc-handle">@username</div>
+          <div class="rank" id="lc-ranking">Ranking: —</div>
+        </div>
+        <div style="margin-left:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+          <button class="btn btn-lc btn-sm" onclick="syncLeetCode(true)" id="lc-sync-btn">↻ Re-sync</button>
+          <button class="btn btn-danger btn-sm" onclick="disconnectLeetCode()">Disconnect</button>
+        </div>
+      </div>
+      <div class="lc-breakdown">
+        <div class="lc-bd-item"><div class="lc-bd-val total" id="lcp-total">0</div><div class="lc-bd-label">Total Solved</div></div>
+        <div class="lc-bd-item"><div class="lc-bd-val e" id="lcp-easy">0</div><div class="lc-bd-label">Easy</div></div>
+        <div class="lc-bd-item"><div class="lc-bd-val m" id="lcp-med">0</div><div class="lc-bd-label">Medium</div></div>
+        <div class="lc-bd-item"><div class="lc-bd-val h" id="lcp-hard">0</div><div class="lc-bd-label">Hard</div></div>
+      </div>
+      <div class="lc-matched-info" id="lc-matched-info">Matching solved problems to your tracker list…</div>
+    </div>
+
+    <div id="lc-sync-status-bar" class="lc-status" style="display:none"></div>
+
+    <div class="sc">
+      <div class="sc-title">
+        Recently Solved on LeetCode
+        <span style="font-size:11px;color:var(--text3);font-weight:400" id="lc-last-sync"></span>
+      </div>
+      <div id="lc-solved-list" class="lc-solved-list">
+        <div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">Sync to load your solved problems</div>
+      </div>
+    </div>
+
+    <div class="sc">
+      <div class="sc-title">Matched to Tracker Problems</div>
+      <div id="lc-matched-list" style="color:var(--text3);font-size:13px;padding:8px 0">Sync to see matches</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SETTINGS ══════════ -->
+<div id="page-settings" class="page">
+  <div class="page-title">Settings</div>
+  <div class="page-sub">Manage profile, users, and preferences</div>
+
+  <div class="set-sec">
+    <div class="set-title">Switch User</div>
+    <div class="user-list" id="user-list"></div>
+    <div style="font-size:11px;color:var(--text3)">Each user has independent progress and LeetCode connection</div>
+  </div>
+
+  <div class="set-sec">
+    <div class="set-title">Create New User</div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Username</label><input type="text" id="new-uname" placeholder="e.g. alice_dev"></div>
+      <div class="form-row"><label class="form-label">Email</label><input type="email" id="new-email" placeholder="alice@example.com"></div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="createUser()">Create User</button>
+  </div>
+
+  <div class="set-sec">
+    <div class="set-title">Profile</div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Username</label><input type="text" id="edit-uname"></div>
+      <div class="form-row"><label class="form-label">Email</label><input type="email" id="edit-email"></div>
+    </div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">Daily email reminders</div><div class="toggle-sub">Get a morning problem reminder</div></div>
+      <label class="toggle"><input type="checkbox" id="notif-toggle"><span class="toggle-slider"></span></label>
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="saveProfile()">Save Profile</button></div>
+  </div>
+
+  <div class="set-sec">
+    <div class="set-title">About</div>
+    <ul class="info-list">
+      <li><span>💾</span><span>All data saved locally in your browser — no server needed</span></li>
+      <li><span>🧩</span><span>62 curated DSA questions across 18 topics, pre-loaded on first visit</span></li>
+      <li><span>🟧</span><span>LeetCode Sync fetches your public profile and auto-marks solved questions</span></li>
+      <li><span>💡</span><span>Click 💡 on any problem to get smart similarity-based recommendations</span></li>
+      <li><span>🔄</span><span>Status cycles: Todo → In Progress → Solved — click the status badge</span></li>
+      <li><span>➕</span><span>Add your own custom problems with the "+ Add Problem" button</span></li>
+    </ul>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sb-title">💡 Recommendations</div>
+  <div class="sb-sub" id="rec-sub">Personalised picks based on your progress</div>
+  <div id="rec-source" class="rec-src" style="display:none"></div>
+  <div id="rec-list"></div>
+</div>
+</div><!-- /main -->
+
+<!-- ADD PROBLEM MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal-box">
+    <div class="modal-title">Add Problem <button class="modal-close" onclick="closeAddModal()">✕</button></div>
+    <div class="form-row"><label class="form-label">Title *</label><input type="text" id="m-title" placeholder="e.g. Two Sum"></div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Topic *</label>
+        <select id="m-topic">
+          <option value="">Select topic…</option>
+          <option>Arrays</option><option>Strings</option><option>Linked Lists</option>
+          <option>Stacks &amp; Queues</option><option>Trees</option><option>Graphs</option>
+          <option>Dynamic Programming</option><option>Recursion &amp; Backtracking</option>
+          <option>Binary Search</option><option>Sorting &amp; Searching</option>
+          <option>Heap / Priority Queue</option><option>Hash Maps</option>
+          <option>Two Pointers</option><option>Sliding Window</option>
+          <option>Greedy</option><option>Bit Manipulation</option>
+          <option>Math &amp; Geometry</option><option>Tries</option>
+        </select>
+      </div>
+      <div class="form-row"><label class="form-label">Difficulty *</label>
+        <select id="m-diff"><option value="">Select…</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">URL</label><input type="url" id="m-url" placeholder="https://leetcode.com/problems/…"></div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Platform</label>
+        <select id="m-platform"><option>LeetCode</option><option>HackerRank</option><option>GeeksForGeeks</option><option>Codeforces</option><option>Other</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Problem # (optional)</label><input type="number" id="m-num" placeholder="e.g. 1"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Tags (comma-separated)</label><input type="text" id="m-tags" placeholder="e.g. hash-map, two-pointers"></div>
+    <div style="display:flex;gap:9px;margin-top:4px">
+      <button class="btn btn-primary" onclick="addQuestion()">Add Problem</button>
+      <button class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  SEED DATA
+// ═══════════════════════════════════════════════════════════
+const SEED_QUESTIONS=[
+  {id:'q1',title:'Two Sum',topic:'Arrays',difficulty:'Easy',url:'https://leetcode.com/problems/two-sum/',platform:'LeetCode',tags:['hash-map','array'],num:1,slug:'two-sum'},
+  {id:'q2',title:'Best Time to Buy and Sell Stock',topic:'Arrays',difficulty:'Easy',url:'https://leetcode.com/problems/best-time-to-buy-and-sell-stock/',platform:'LeetCode',tags:['greedy','array'],num:121,slug:'best-time-to-buy-and-sell-stock'},
+  {id:'q3',title:'Contains Duplicate',topic:'Arrays',difficulty:'Easy',url:'https://leetcode.com/problems/contains-duplicate/',platform:'LeetCode',tags:['hash-set','array'],num:217,slug:'contains-duplicate'},
+  {id:'q4',title:'Product of Array Except Self',topic:'Arrays',difficulty:'Medium',url:'https://leetcode.com/problems/product-of-array-except-self/',platform:'LeetCode',tags:['prefix-sum','array'],num:238,slug:'product-of-array-except-self'},
+  {id:'q5',title:'Maximum Subarray',topic:'Arrays',difficulty:'Medium',url:'https://leetcode.com/problems/maximum-subarray/',platform:'LeetCode',tags:['kadane','dp'],num:53,slug:'maximum-subarray'},
+  {id:'q6',title:'3Sum',topic:'Arrays',difficulty:'Medium',url:'https://leetcode.com/problems/3sum/',platform:'LeetCode',tags:['two-pointers','sorting'],num:15,slug:'3sum'},
+  {id:'q7',title:'Trapping Rain Water',topic:'Arrays',difficulty:'Hard',url:'https://leetcode.com/problems/trapping-rain-water/',platform:'LeetCode',tags:['two-pointers','stack'],num:42,slug:'trapping-rain-water'},
+  {id:'q8',title:'Median of Two Sorted Arrays',topic:'Arrays',difficulty:'Hard',url:'https://leetcode.com/problems/median-of-two-sorted-arrays/',platform:'LeetCode',tags:['binary-search','divide-conquer'],num:4,slug:'median-of-two-sorted-arrays'},
+  {id:'q9',title:'Valid Anagram',topic:'Strings',difficulty:'Easy',url:'https://leetcode.com/problems/valid-anagram/',platform:'LeetCode',tags:['hash-map','sorting'],num:242,slug:'valid-anagram'},
+  {id:'q10',title:'Valid Palindrome',topic:'Strings',difficulty:'Easy',url:'https://leetcode.com/problems/valid-palindrome/',platform:'LeetCode',tags:['two-pointers','string'],num:125,slug:'valid-palindrome'},
+  {id:'q11',title:'Longest Substring Without Repeating Characters',topic:'Strings',difficulty:'Medium',url:'https://leetcode.com/problems/longest-substring-without-repeating-characters/',platform:'LeetCode',tags:['sliding-window','hash-map'],num:3,slug:'longest-substring-without-repeating-characters'},
+  {id:'q12',title:'Group Anagrams',topic:'Strings',difficulty:'Medium',url:'https://leetcode.com/problems/group-anagrams/',platform:'LeetCode',tags:['hash-map','sorting'],num:49,slug:'group-anagrams'},
+  {id:'q13',title:'Minimum Window Substring',topic:'Strings',difficulty:'Hard',url:'https://leetcode.com/problems/minimum-window-substring/',platform:'LeetCode',tags:['sliding-window','hash-map'],num:76,slug:'minimum-window-substring'},
+  {id:'q14',title:'Reverse a Linked List',topic:'Linked Lists',difficulty:'Easy',url:'https://leetcode.com/problems/reverse-linked-list/',platform:'LeetCode',tags:['linked-list','recursion'],num:206,slug:'reverse-linked-list'},
+  {id:'q15',title:'Merge Two Sorted Lists',topic:'Linked Lists',difficulty:'Easy',url:'https://leetcode.com/problems/merge-two-sorted-lists/',platform:'LeetCode',tags:['linked-list','recursion'],num:21,slug:'merge-two-sorted-lists'},
+  {id:'q16',title:'Linked List Cycle',topic:'Linked Lists',difficulty:'Easy',url:'https://leetcode.com/problems/linked-list-cycle/',platform:'LeetCode',tags:['fast-slow-pointers'],num:141,slug:'linked-list-cycle'},
+  {id:'q17',title:'Remove Nth Node From End of List',topic:'Linked Lists',difficulty:'Medium',url:'https://leetcode.com/problems/remove-nth-node-from-end-of-list/',platform:'LeetCode',tags:['two-pointers','linked-list'],num:19,slug:'remove-nth-node-from-end-of-list'},
+  {id:'q18',title:'Reorder List',topic:'Linked Lists',difficulty:'Medium',url:'https://leetcode.com/problems/reorder-list/',platform:'LeetCode',tags:['fast-slow-pointers'],num:143,slug:'reorder-list'},
+  {id:'q19',title:'Merge K Sorted Lists',topic:'Linked Lists',difficulty:'Hard',url:'https://leetcode.com/problems/merge-k-sorted-lists/',platform:'LeetCode',tags:['heap','divide-conquer'],num:23,slug:'merge-k-sorted-lists'},
+  {id:'q20',title:'Valid Parentheses',topic:'Stacks & Queues',difficulty:'Easy',url:'https://leetcode.com/problems/valid-parentheses/',platform:'LeetCode',tags:['stack'],num:20,slug:'valid-parentheses'},
+  {id:'q21',title:'Min Stack',topic:'Stacks & Queues',difficulty:'Medium',url:'https://leetcode.com/problems/min-stack/',platform:'LeetCode',tags:['stack','design'],num:155,slug:'min-stack'},
+  {id:'q22',title:'Daily Temperatures',topic:'Stacks & Queues',difficulty:'Medium',url:'https://leetcode.com/problems/daily-temperatures/',platform:'LeetCode',tags:['monotonic-stack'],num:739,slug:'daily-temperatures'},
+  {id:'q23',title:'Largest Rectangle in Histogram',topic:'Stacks & Queues',difficulty:'Hard',url:'https://leetcode.com/problems/largest-rectangle-in-histogram/',platform:'LeetCode',tags:['monotonic-stack'],num:84,slug:'largest-rectangle-in-histogram'},
+  {id:'q24',title:'Invert Binary Tree',topic:'Trees',difficulty:'Easy',url:'https://leetcode.com/problems/invert-binary-tree/',platform:'LeetCode',tags:['dfs','recursion'],num:226,slug:'invert-binary-tree'},
+  {id:'q25',title:'Maximum Depth of Binary Tree',topic:'Trees',difficulty:'Easy',url:'https://leetcode.com/problems/maximum-depth-of-binary-tree/',platform:'LeetCode',tags:['dfs','bfs'],num:104,slug:'maximum-depth-of-binary-tree'},
+  {id:'q26',title:'Balanced Binary Tree',topic:'Trees',difficulty:'Easy',url:'https://leetcode.com/problems/balanced-binary-tree/',platform:'LeetCode',tags:['dfs','recursion'],num:110,slug:'balanced-binary-tree'},
+  {id:'q27',title:'Binary Tree Level Order Traversal',topic:'Trees',difficulty:'Medium',url:'https://leetcode.com/problems/binary-tree-level-order-traversal/',platform:'LeetCode',tags:['bfs','queue'],num:102,slug:'binary-tree-level-order-traversal'},
+  {id:'q28',title:'Validate Binary Search Tree',topic:'Trees',difficulty:'Medium',url:'https://leetcode.com/problems/validate-binary-search-tree/',platform:'LeetCode',tags:['dfs','bst'],num:98,slug:'validate-binary-search-tree'},
+  {id:'q29',title:'Lowest Common Ancestor of BST',topic:'Trees',difficulty:'Medium',url:'https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/',platform:'LeetCode',tags:['bst','recursion'],num:235,slug:'lowest-common-ancestor-of-a-binary-search-tree'},
+  {id:'q30',title:'Binary Tree Maximum Path Sum',topic:'Trees',difficulty:'Hard',url:'https://leetcode.com/problems/binary-tree-maximum-path-sum/',platform:'LeetCode',tags:['dfs','dp'],num:124,slug:'binary-tree-maximum-path-sum'},
+  {id:'q31',title:'Serialize and Deserialize Binary Tree',topic:'Trees',difficulty:'Hard',url:'https://leetcode.com/problems/serialize-and-deserialize-binary-tree/',platform:'LeetCode',tags:['dfs','design'],num:297,slug:'serialize-and-deserialize-binary-tree'},
+  {id:'q32',title:'Number of Islands',topic:'Graphs',difficulty:'Medium',url:'https://leetcode.com/problems/number-of-islands/',platform:'LeetCode',tags:['dfs','bfs','union-find'],num:200,slug:'number-of-islands'},
+  {id:'q33',title:'Clone Graph',topic:'Graphs',difficulty:'Medium',url:'https://leetcode.com/problems/clone-graph/',platform:'LeetCode',tags:['dfs','bfs','hash-map'],num:133,slug:'clone-graph'},
+  {id:'q34',title:'Course Schedule',topic:'Graphs',difficulty:'Medium',url:'https://leetcode.com/problems/course-schedule/',platform:'LeetCode',tags:['topological-sort','cycle-detection'],num:207,slug:'course-schedule'},
+  {id:'q35',title:'Pacific Atlantic Water Flow',topic:'Graphs',difficulty:'Medium',url:'https://leetcode.com/problems/pacific-atlantic-water-flow/',platform:'LeetCode',tags:['dfs','bfs'],num:417,slug:'pacific-atlantic-water-flow'},
+  {id:'q36',title:'Word Ladder',topic:'Graphs',difficulty:'Hard',url:'https://leetcode.com/problems/word-ladder/',platform:'LeetCode',tags:['bfs','shortest-path'],num:127,slug:'word-ladder'},
+  {id:'q37',title:'Climbing Stairs',topic:'Dynamic Programming',difficulty:'Easy',url:'https://leetcode.com/problems/climbing-stairs/',platform:'LeetCode',tags:['dp','fibonacci'],num:70,slug:'climbing-stairs'},
+  {id:'q38',title:'House Robber',topic:'Dynamic Programming',difficulty:'Medium',url:'https://leetcode.com/problems/house-robber/',platform:'LeetCode',tags:['dp','1d-dp'],num:198,slug:'house-robber'},
+  {id:'q39',title:'Coin Change',topic:'Dynamic Programming',difficulty:'Medium',url:'https://leetcode.com/problems/coin-change/',platform:'LeetCode',tags:['dp','unbounded-knapsack'],num:322,slug:'coin-change'},
+  {id:'q40',title:'Longest Common Subsequence',topic:'Dynamic Programming',difficulty:'Medium',url:'https://leetcode.com/problems/longest-common-subsequence/',platform:'LeetCode',tags:['dp','2d-dp'],num:1143,slug:'longest-common-subsequence'},
+  {id:'q41',title:'Word Break',topic:'Dynamic Programming',difficulty:'Medium',url:'https://leetcode.com/problems/word-break/',platform:'LeetCode',tags:['dp','memoization'],num:139,slug:'word-break'},
+  {id:'q42',title:'Edit Distance',topic:'Dynamic Programming',difficulty:'Hard',url:'https://leetcode.com/problems/edit-distance/',platform:'LeetCode',tags:['dp','2d-dp'],num:72,slug:'edit-distance'},
+  {id:'q43',title:'Burst Balloons',topic:'Dynamic Programming',difficulty:'Hard',url:'https://leetcode.com/problems/burst-balloons/',platform:'LeetCode',tags:['dp','interval-dp'],num:312,slug:'burst-balloons'},
+  {id:'q44',title:'Binary Search',topic:'Binary Search',difficulty:'Easy',url:'https://leetcode.com/problems/binary-search/',platform:'LeetCode',tags:['binary-search'],num:704,slug:'binary-search'},
+  {id:'q45',title:'Find Minimum in Rotated Sorted Array',topic:'Binary Search',difficulty:'Medium',url:'https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/',platform:'LeetCode',tags:['binary-search'],num:153,slug:'find-minimum-in-rotated-sorted-array'},
+  {id:'q46',title:'Search in Rotated Sorted Array',topic:'Binary Search',difficulty:'Medium',url:'https://leetcode.com/problems/search-in-rotated-sorted-array/',platform:'LeetCode',tags:['binary-search'],num:33,slug:'search-in-rotated-sorted-array'},
+  {id:'q47',title:'Koko Eating Bananas',topic:'Binary Search',difficulty:'Medium',url:'https://leetcode.com/problems/koko-eating-bananas/',platform:'LeetCode',tags:['binary-search','greedy'],num:875,slug:'koko-eating-bananas'},
+  {id:'q48',title:'Valid Palindrome II',topic:'Two Pointers',difficulty:'Easy',url:'https://leetcode.com/problems/valid-palindrome-ii/',platform:'LeetCode',tags:['two-pointers','greedy'],num:680,slug:'valid-palindrome-ii'},
+  {id:'q49',title:'Container With Most Water',topic:'Two Pointers',difficulty:'Medium',url:'https://leetcode.com/problems/container-with-most-water/',platform:'LeetCode',tags:['two-pointers','greedy'],num:11,slug:'container-with-most-water'},
+  {id:'q50',title:'Sort Colors',topic:'Two Pointers',difficulty:'Medium',url:'https://leetcode.com/problems/sort-colors/',platform:'LeetCode',tags:['two-pointers'],num:75,slug:'sort-colors'},
+  {id:'q51',title:'Maximum Average Subarray I',topic:'Sliding Window',difficulty:'Easy',url:'https://leetcode.com/problems/maximum-average-subarray-i/',platform:'LeetCode',tags:['sliding-window'],num:643,slug:'maximum-average-subarray-i'},
+  {id:'q52',title:'Longest Repeating Character Replacement',topic:'Sliding Window',difficulty:'Medium',url:'https://leetcode.com/problems/longest-repeating-character-replacement/',platform:'LeetCode',tags:['sliding-window','hash-map'],num:424,slug:'longest-repeating-character-replacement'},
+  {id:'q53',title:'Sliding Window Maximum',topic:'Sliding Window',difficulty:'Hard',url:'https://leetcode.com/problems/sliding-window-maximum/',platform:'LeetCode',tags:['sliding-window','monotonic-deque'],num:239,slug:'sliding-window-maximum'},
+  {id:'q54',title:'Kth Largest Element in a Stream',topic:'Heap / Priority Queue',difficulty:'Easy',url:'https://leetcode.com/problems/kth-largest-element-in-a-stream/',platform:'LeetCode',tags:['heap','design'],num:703,slug:'kth-largest-element-in-a-stream'},
+  {id:'q55',title:'Top K Frequent Elements',topic:'Heap / Priority Queue',difficulty:'Medium',url:'https://leetcode.com/problems/top-k-frequent-elements/',platform:'LeetCode',tags:['heap','hash-map'],num:347,slug:'top-k-frequent-elements'},
+  {id:'q56',title:'Find Median from Data Stream',topic:'Heap / Priority Queue',difficulty:'Hard',url:'https://leetcode.com/problems/find-median-from-data-stream/',platform:'LeetCode',tags:['heap','two-heaps'],num:295,slug:'find-median-from-data-stream'},
+  {id:'q57',title:'Subsets',topic:'Recursion & Backtracking',difficulty:'Medium',url:'https://leetcode.com/problems/subsets/',platform:'LeetCode',tags:['backtracking','bit-manipulation'],num:78,slug:'subsets'},
+  {id:'q58',title:'Combination Sum',topic:'Recursion & Backtracking',difficulty:'Medium',url:'https://leetcode.com/problems/combination-sum/',platform:'LeetCode',tags:['backtracking','recursion'],num:39,slug:'combination-sum'},
+  {id:'q59',title:'Permutations',topic:'Recursion & Backtracking',difficulty:'Medium',url:'https://leetcode.com/problems/permutations/',platform:'LeetCode',tags:['backtracking','recursion'],num:46,slug:'permutations'},
+  {id:'q60',title:'N-Queens',topic:'Recursion & Backtracking',difficulty:'Hard',url:'https://leetcode.com/problems/n-queens/',platform:'LeetCode',tags:['backtracking'],num:51,slug:'n-queens'},
+  {id:'q61',title:'Find the Duplicate Number',topic:'Arrays',difficulty:'Medium',url:'https://leetcode.com/problems/find-the-duplicate-number/',platform:'LeetCode',tags:['fast-slow-pointers','binary-search'],num:287,slug:'find-the-duplicate-number'},
+  {id:'q62',title:'Longest Palindromic Substring',topic:'Strings',difficulty:'Medium',url:'https://leetcode.com/problems/longest-palindromic-substring/',platform:'LeetCode',tags:['dp','expand-around-center'],num:5,slug:'longest-palindromic-substring'}
+];
+
+const TOPIC_ICONS={'Arrays':'⬛','Strings':'🔤','Linked Lists':'🔗','Stacks & Queues':'📚','Trees':'🌳','Graphs':'🕸️','Dynamic Programming':'🧩','Recursion & Backtracking':'🔄','Binary Search':'🔍','Sorting & Searching':'↕️','Heap / Priority Queue':'⛰️','Hash Maps':'#️⃣','Two Pointers':'👉','Sliding Window':'🪟','Greedy':'💰','Bit Manipulation':'💾','Math & Geometry':'📐','Tries':'🌐'};
+const DIFF_ORDER=['Easy','Medium','Hard'];
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let APP={};
+let filters={diff:'All',status:'All',source:'All'};
+let openTopics={};
+let openNotes={};
+let activeRecQId=null;
+
+// ── Slug index for fast LeetCode matching ──────────────────
+const SLUG_INDEX={};
+SEED_QUESTIONS.forEach(q=>{if(q.slug)SLUG_INDEX[q.slug]=q.id;});
+
+// ── Normalise a LeetCode title/slug → look up in our list ──
+function matchLCSlug(slug){
+  if(!slug)return null;
+  const s=slug.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  return SLUG_INDEX[s]||null;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PERSISTENCE
+// ═══════════════════════════════════════════════════════════
+function loadData(){
+  try{APP=JSON.parse(localStorage.getItem('dsa_app_v2')||'{}');}catch(e){APP={};}
+  if(!APP.users)APP.users=[{id:'u1',username:'demo_coder',email:'demo@dsa.com',notification:true,streak:{current:0,longest:0,lastDate:null}}];
+  if(!APP.activeUserId)APP.activeUserId=APP.users[0].id;
+  if(!APP.questions)APP.questions=JSON.parse(JSON.stringify(SEED_QUESTIONS));
+  if(!APP.progress)APP.progress={};
+  if(!APP.leetcode)APP.leetcode={};
+  save();
+}
+function save(){localStorage.setItem('dsa_app_v2',JSON.stringify(APP));}
+
+// ═══════════════════════════════════════════════════════════
+//  USER HELPERS
+// ═══════════════════════════════════════════════════════════
+function getUser(id){return APP.users.find(u=>u.id===(id||APP.activeUserId));}
+function getLCData(uid){return APP.leetcode[uid||APP.activeUserId]||null;}
+
+// ═══════════════════════════════════════════════════════════
+//  PROGRESS HELPERS
+// ═══════════════════════════════════════════════════════════
+function getProgress(uid,qid){return(APP.progress[uid]||{})[qid]||{status:'Todo',notes:'',dateCompleted:null,lastUpdated:null,lcSynced:false};}
+function setProgress(uid,qid,updates){
+  if(!APP.progress[uid])APP.progress[uid]={};
+  const cur=getProgress(uid,qid);
+  const merged={...cur,...updates,lastUpdated:new Date().toISOString()};
+  if(merged.status==='Solved'&&!merged.dateCompleted)merged.dateCompleted=new Date().toISOString();
+  if(merged.status!=='Solved')merged.dateCompleted=null;
+  APP.progress[uid][qid]=merged;
+  if(updates.status==='Solved')updateStreak(uid);
+  save();
+}
+function updateStreak(uid){
+  const u=getUser(uid);if(!u)return;
+  const today=new Date().toDateString();
+  if(u.streak.lastDate===today)return;
+  const yesterday=new Date(Date.now()-86400000).toDateString();
+  u.streak.current=u.streak.lastDate===yesterday?(u.streak.current||0)+1:1;
+  u.streak.longest=Math.max(u.streak.longest||0,u.streak.current);
+  u.streak.lastDate=today;save();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════════════════
+function getStats(uid){
+  const allQ=APP.questions;
+  const prog=APP.progress[uid]||{};
+  let solved=0,inProg=0,weekSolved=0;
+  const diffMap={Easy:{total:0,solved:0},Medium:{total:0,solved:0},Hard:{total:0,solved:0}};
+  const topicMap={};
+  const weekAgo=Date.now()-7*86400000;
+  for(const q of allQ){
+    const p=prog[q.id]||{status:'Todo'};
+    if(!topicMap[q.topic])topicMap[q.topic]={total:0,solved:0,inProg:0};
+    topicMap[q.topic].total++;
+    if(q.difficulty&&diffMap[q.difficulty])diffMap[q.difficulty].total++;
+    if(p.status==='Solved'){
+      solved++;
+      if(q.difficulty&&diffMap[q.difficulty])diffMap[q.difficulty].solved++;
+      topicMap[q.topic].solved++;
+      if(p.dateCompleted&&new Date(p.dateCompleted).getTime()>weekAgo)weekSolved++;
+    }else if(p.status==='In Progress'){inProg++;topicMap[q.topic].inProg++;}
+  }
+  return{total:allQ.length,solved,inProg,weekSolved,diffMap,topicMap};
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RECOMMENDATIONS
+// ═══════════════════════════════════════════════════════════
+function getRecommendations(uid,srcQId,count=3){
+  const src=APP.questions.find(q=>q.id===srcQId);if(!src)return[];
+  const prog=APP.progress[uid]||{};
+  const solved=new Set(Object.entries(prog).filter(([,p])=>p.status==='Solved').map(([id])=>id));
+  solved.add(srcQId);
+  const ok=q=>!solved.has(q.id);
+  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  const hd=DIFF_ORDER[Math.min(DIFF_ORDER.indexOf(src.difficulty)+1,2)];
+  const t1=shuffle(APP.questions.filter(q=>ok(q)&&q.topic===src.topic&&q.difficulty===src.difficulty));
+  const t2=shuffle(APP.questions.filter(q=>ok(q)&&q.topic===src.topic&&q.difficulty===hd));
+  const t3=shuffle(APP.questions.filter(q=>ok(q)&&q.topic===src.topic));
+  const t4=shuffle(APP.questions.filter(q=>ok(q)&&q.tags&&src.tags&&q.tags.some(t=>src.tags.includes(t))));
+  const t5=shuffle(APP.questions.filter(q=>ok(q)));
+  const seen=new Set();const pool=[];
+  for(const q of[...t1,...t2,...t3,...t4,...t5]){if(!seen.has(q.id)){seen.add(q.id);pool.push(q);}if(pool.length>=count)break;}
+  return pool.slice(0,count);
+}
+function getDailyRecs(uid,count=3){
+  const prog=APP.progress[uid]||{};
+  const inP=APP.questions.filter(q=>(prog[q.id]||{}).status==='In Progress');
+  const todo=APP.questions.filter(q=>!(prog[q.id])||prog[q.id].status==='Todo');
+  const src=inP[0]||todo[0]||APP.questions[0];
+  if(!src)return{source:null,recs:[]};
+  return{source:src,inP,recs:getRecommendations(uid,src.id,count)};
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LEETCODE API
+// ═══════════════════════════════════════════════════════════
+// LeetCode's public GraphQL endpoint
+const LC_ENDPOINT='https://leetcode.com/graphql';
+
+// Query: user public stats + recent AC submissions
+const LC_QUERY=`
+query getUserStats($username: String!) {
+  matchedUser(username: $username) {
+    username
+    profile { realName ranking userAvatar }
+    submitStatsGlobal {
+      acSubmissionNum { difficulty count }
+    }
+  }
+  recentAcSubmissionList(username: $username, limit: 50) {
+    id title titleSlug timestamp
+  }
+}`;
+
+async function fetchLeetCodeData(username){
+  const res=await fetch(LC_ENDPOINT,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Referer':'https://leetcode.com'},
+    body:JSON.stringify({query:LC_QUERY,variables:{username}})
+  });
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const json=await res.json();
+  if(json.errors)throw new Error(json.errors[0].message||'GraphQL error');
+  if(!json.data.matchedUser)throw new Error('User "'+username+'" not found');
+  return json.data;
+}
+
+async function connectLeetCode(){
+  const username=document.getElementById('lc-username-input').value.trim();
+  if(!username){showToast('Enter a username','error');return;}
+  const btn=document.getElementById('lc-connect-btn');
+  const statusEl=document.getElementById('lc-connect-status');
+  btn.innerHTML='<span class="spinner"></span> Fetching…';btn.disabled=true;
+  statusEl.innerHTML='<div class="lc-status loading"><span class="spinner"></span>&nbsp; Connecting to LeetCode…</div>';
+  try{
+    const data=await fetchLeetCodeData(username);
+    const uid=APP.activeUserId;
+    const mu=data.matchedUser;
+    const stats=mu.submitStatsGlobal.acSubmissionNum;
+    const easy=stats.find(s=>s.difficulty==='Easy')?.count||0;
+    const med=stats.find(s=>s.difficulty==='Medium')?.count||0;
+    const hard=stats.find(s=>s.difficulty==='Hard')?.count||0;
+    const total=stats.find(s=>s.difficulty==='All')?.count||0;
+    APP.leetcode[uid]={
+      username:mu.username,
+      realName:mu.profile.realName||mu.username,
+      ranking:mu.profile.ranking||0,
+      avatar:mu.profile.userAvatar||'',
+      stats:{total,easy,med,hard},
+      recentAC:data.recentAcSubmissionList||[],
+      lastSync:new Date().toISOString()
+    };
+    save();
+    applyLCMatches(uid);
+    document.getElementById('lc-nav-badge').style.display='inline';
+    statusEl.innerHTML='<div class="lc-status ok">✓ Connected as @'+mu.username+'! Redirecting to profile…</div>';
+    setTimeout(()=>{showPage('leetcode');renderLCPage();},900);
+  }catch(err){
+    statusEl.innerHTML='<div class="lc-status err">✗ '+err.message+'<br><small style="opacity:.7">LeetCode may block CORS in some browsers. Try opening the HTML file locally.</small></div>';
+  }finally{btn.innerHTML='Connect';btn.disabled=false;}
+}
+
+async function syncLeetCode(silent=false){
+  const uid=APP.activeUserId;
+  const lc=getLCData(uid);
+  if(!lc)return;
+  const btn=document.getElementById('lc-sync-btn');
+  if(btn){btn.innerHTML='<span class="spinner"></span>';btn.disabled=true;}
+  const barEl=document.getElementById('lc-sync-status-bar');
+  if(barEl){barEl.className='lc-status loading';barEl.style.display='flex';barEl.innerHTML='<span class="spinner"></span>&nbsp; Syncing with LeetCode…';}
+  try{
+    const data=await fetchLeetCodeData(lc.username);
+    const mu=data.matchedUser;
+    const stats=mu.submitStatsGlobal.acSubmissionNum;
+    lc.stats={
+      total:stats.find(s=>s.difficulty==='All')?.count||0,
+      easy:stats.find(s=>s.difficulty==='Easy')?.count||0,
+      med:stats.find(s=>s.difficulty==='Medium')?.count||0,
+      hard:stats.find(s=>s.difficulty==='Hard')?.count||0
+    };
+    lc.recentAC=data.recentAcSubmissionList||[];
+    lc.lastSync=new Date().toISOString();
+    lc.ranking=mu.profile.ranking||lc.ranking;
+    save();
+    applyLCMatches(uid);
+    if(barEl){barEl.className='lc-status ok';barEl.innerHTML='✓ Synced successfully';}
+    if(!silent)showToast('LeetCode synced!','success');
+    renderLCPage();renderDashboard();renderProblems();
+  }catch(err){
+    if(barEl){barEl.className='lc-status err';barEl.innerHTML='✗ Sync failed: '+err.message;}
+    if(!silent)showToast('Sync failed: '+err.message,'error');
+  }finally{if(btn){btn.innerHTML='↻ Re-sync';btn.disabled=false;}}
+}
+
+function applyLCMatches(uid){
+  const lc=getLCData(uid);
+  if(!lc||!lc.recentAC)return;
+  let matched=0;
+  const matchedQIds=new Set();
+  for(const sub of lc.recentAC){
+    const qid=matchLCSlug(sub.titleSlug);
+    if(qid&&!matchedQIds.has(qid)){
+      matchedQIds.add(qid);
+      const cur=getProgress(uid,qid);
+      if(cur.status!=='Solved'){
+        setProgress(uid,qid,{status:'Solved',lcSynced:true,dateCompleted:new Date(parseInt(sub.timestamp)*1000).toISOString()});
+        matched++;
+      }
+    }
+  }
+  lc.matchedCount=matchedQIds.size;
+  save();
+  return matched;
+}
+
+function disconnectLeetCode(){
+  const uid=APP.activeUserId;
+  if(!confirm('Disconnect LeetCode? Your synced progress will remain but LeetCode data will be cleared.'))return;
+  delete APP.leetcode[uid];
+  save();
+  document.getElementById('lc-nav-badge').style.display='none';
+  renderLCPage();renderDashboard();
+  showToast('LeetCode disconnected','info');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE ROUTING
+// ═══════════════════════════════════════════════════════════
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelector('[data-page="'+id+'"]').classList.add('active');
+  document.getElementById('sidebar').style.display=id==='problems'?'block':'none';
+  if(id==='dashboard'){renderDashboard();}
+  if(id==='problems'){renderProblems();renderSidebar(null);}
+  if(id==='leetcode'){renderLCPage();}
+  if(id==='settings'){renderSettings();}
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER: DASHBOARD
+// ═══════════════════════════════════════════════════════════
+function renderDashboard(){
+  const uid=APP.activeUserId;
+  const u=getUser(uid);
+  const st=getStats(uid);
+  document.getElementById('dash-uname').textContent=u.username;
+  document.getElementById('nav-uname').textContent=u.username;
+  document.getElementById('nav-uemail').textContent=u.email;
+  document.getElementById('nav-avatar').textContent=(u.username||'?').slice(0,2).toUpperCase();
+  document.getElementById('s-solved').textContent=st.solved;
+  document.getElementById('s-solved-sub').textContent='of '+st.total+' total';
+  document.getElementById('s-inprog').textContent=st.inProg;
+  document.getElementById('s-week').textContent=st.weekSolved;
+  document.getElementById('s-streak').textContent=(u.streak.current||0)+'🔥';
+  document.getElementById('s-streak-sub').textContent='best: '+(u.streak.longest||0)+' days';
+  document.getElementById('streak-display').textContent='🔥 '+(u.streak.current||0)+' day streak';
+
+  // LeetCode panel
+  const lc=getLCData(uid);
+  if(lc){
+    document.getElementById('dash-lc-panel').style.display='block';
+    document.getElementById('dash-lc-nudge').style.display='none';
+    document.getElementById('dash-lc-user').textContent='@'+lc.username;
+    document.getElementById('dlc-total').textContent=lc.stats.total;
+    document.getElementById('dlc-easy').textContent=lc.stats.easy;
+    document.getElementById('dlc-med').textContent=lc.stats.med;
+    document.getElementById('dlc-hard').textContent=lc.stats.hard;
+    document.getElementById('lc-nav-badge').style.display='inline';
+    const ls=lc.lastSync?new Date(lc.lastSync).toLocaleString():'never';
+    document.getElementById('dlc-sync-info').innerHTML='Last synced: <strong>'+ls+'</strong>';
+    const mb=document.getElementById('dlc-matched');
+    if(lc.matchedCount){mb.style.display='inline-flex';mb.textContent='✓ '+lc.matchedCount+' matched';}
+  }else{
+    document.getElementById('dash-lc-panel').style.display='none';
+    document.getElementById('dash-lc-nudge').style.display='block';
+  }
+
+  // Difficulty rings
+  document.getElementById('diff-grid').innerHTML=['Easy','Medium','Hard'].map(d=>{
+    const dd=st.diffMap[d];
+    const pct=dd.total>0?Math.round(dd.solved/dd.total*100):0;
+    const r=26;const circ=2*Math.PI*r;const off=circ-(pct/100)*circ;
+    const col=d==='Easy'?'#10b981':d==='Medium'?'#f59e0b':'#ef4444';
+    return`<div class="diff-item">
+      <div class="diff-label ${d==='Easy'?'e':d==='Medium'?'m':'h'}">${d}</div>
+      <div class="diff-ring">
+        <svg width="68" height="68" viewBox="0 0 68 68">
+          <circle cx="34" cy="34" r="${r}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="5"/>
+          <circle cx="34" cy="34" r="${r}" fill="none" stroke="${col}" stroke-width="5"
+            stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}"
+            stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>
+        </svg>
+        <div class="diff-ring-c">${pct}%</div>
+      </div>
+      <div class="diff-count">${dd.solved}/${dd.total}</div>
+    </div>`;
+  }).join('');
+
+  // Topic bars
+  const topics=Object.entries(st.topicMap).sort((a,b)=>b[1].solved-a[1].solved);
+  document.getElementById('topic-bars-sub').textContent=topics.length+' topics';
+  document.getElementById('topic-bars').innerHTML=topics.length?topics.map(([topic,ts])=>{
+    const pct=ts.total>0?Math.round(ts.solved/ts.total*100):0;
+    return`<div class="tbar">
+      <div class="tbar-header">
+        <div class="tbar-name"><span>${TOPIC_ICONS[topic]||'📌'}</span>${topic}</div>
+        <div class="tbar-stats">
+          ${ts.inProg>0?`<span style="color:#60a5fa;font-weight:600">${ts.inProg} active</span>`:''}
+          <span>${ts.solved}/${ts.total}</span>
+          <span class="tbar-pct" style="${pct===100?'color:#34d399':''}">${pct}%</span>
+        </div>
+      </div>
+      <div class="tbar-track"><div class="tbar-fill ${pct===100?'done':''}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join(''):'<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">Start solving to see topic progress</div>';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER: PROBLEMS
+// ═══════════════════════════════════════════════════════════
+function renderProblems(){
+  const uid=APP.activeUserId;
+  const lc=getLCData(uid);
+  const search=(document.getElementById('search-input').value||'').toLowerCase();
+  const allQ=APP.questions;
+  document.getElementById('prob-sub').textContent=allQ.length+' problems across '+[...new Set(allQ.map(q=>q.topic))].length+' topics';
+  if(lc)document.getElementById('prob-lc-btn').innerHTML='🟧 @'+lc.username;
+
+  const topicOrder=[...new Set(allQ.map(q=>q.topic))];
+  const grouped={};
+  for(const q of allQ){
+    const p=getProgress(uid,q.id);
+    const st=p.status||'Todo';
+    if(filters.diff!=='All'&&q.difficulty!==filters.diff)continue;
+    if(filters.status!=='All'&&st!==filters.status)continue;
+    if(filters.source==='LeetCode Synced'&&!p.lcSynced)continue;
+    if(search&&!q.title.toLowerCase().includes(search)&&!(q.tags||[]).some(t=>t.includes(search)))continue;
+    if(!grouped[q.topic])grouped[q.topic]=[];
+    grouped[q.topic].push(q);
+  }
+
+  const container=document.getElementById('topic-sections');
+  const visible=topicOrder.filter(t=>grouped[t]&&grouped[t].length>0);
+  if(!visible.length){
+    container.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No problems match your filters</div><div class="empty-sub">Try adjusting the filters or search</div></div>`;
+    return;
+  }
+  container.innerHTML=visible.map((topic,ti)=>{
+    const qs=grouped[topic];
+    const solvedCt=qs.filter(q=>(getProgress(uid,q.id).status||'Todo')==='Solved').length;
+    const pct=qs.length?Math.round(solvedCt/qs.length*100):0;
+    const isOpen=openTopics[topic]!==false&&(openTopics[topic]===true||(ti===0&&Object.keys(openTopics).length===0));
+    const rows=qs.map(q=>{
+      const p=getProgress(uid,q.id);
+      const st=p.status||'Todo';
+      const cls=st.replace(' ','-');
+      const hasNotes=!!(p.notes&&p.notes.trim());
+      const showNote=openNotes[q.id];
+      const isLCSynced=!!p.lcSynced;
+      return`<div id="qrow-${q.id}">
+        <div class="qrow">
+          <span class="qnum">${q.num||''}</span>
+          <div class="qtitle ${st==='Solved'?'solved':''}">
+            <a href="${q.url||'#'}" target="_blank" rel="noopener">${q.title}</a>
+            <div class="qtags">${(q.tags||[]).slice(0,4).map(t=>`<span class="qtag">${t}</span>`).join('')}</div>
+          </div>
+          ${isLCSynced?'<span class="lc-synced-dot" title="Auto-synced from LeetCode"></span>':''}
+          <span class="diff-badge ${q.difficulty}">${q.difficulty}</span>
+          <button class="sbtn ${cls} ${isLCSynced&&st==='Solved'?'lc-solved':''}" onclick="cycleStatus('${uid}','${q.id}')">
+            ${st==='Solved'?(isLCSynced?'🟧 LC Solved':'✓ Solved'):st==='In Progress'?'⟳ In Progress':'○ Todo'}
+          </button>
+          <button class="icon-btn ${hasNotes?'amber':''}" title="Notes" onclick="toggleNotes('${q.id}')">${hasNotes?'📝':'✏️'}</button>
+          <button class="icon-btn ${activeRecQId===q.id?'active-rec':''}" title="Recommendations" onclick="selectRec('${q.id}')">💡</button>
+        </div>
+        ${showNote?`<div class="notes-panel">
+          <textarea rows="3" id="note-${q.id}" placeholder="Notes, approach, key insights…">${p.notes||''}</textarea>
+          <div class="notes-actions">
+            <button class="btn btn-secondary btn-xs" onclick="toggleNotes('${q.id}')">Cancel</button>
+            <button class="btn btn-primary btn-xs" onclick="saveNote('${uid}','${q.id}')">Save</button>
+          </div>
+        </div>`:''}
+      </div>`;
+    }).join('');
+    return`<div class="tsec">
+      <div class="tsec-header ${isOpen?'open':''}" onclick="toggleTopic('${topic}')">
+        <div class="tsec-left">
+          <span style="font-size:15px">${TOPIC_ICONS[topic]||'📌'}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text)">${topic}</span>
+          <span style="font-size:11px;color:var(--text3)">(${qs.length})</span>
+          <div class="tsec-mini"><div class="tsec-mini-fill" style="width:${pct}%"></div></div>
+          <span style="font-size:11px;font-weight:700;color:${pct===100?'#34d399':'var(--text2)'}">${solvedCt}/${qs.length}</span>
+        </div>
+        <span class="tsec-chev ${isOpen?'open':''}">▼</span>
+      </div>
+      ${isOpen?`<div class="tsec-body">${rows}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER: LEETCODE PAGE
+// ═══════════════════════════════════════════════════════════
+function renderLCPage(){
+  const uid=APP.activeUserId;
+  const lc=getLCData(uid);
+  document.getElementById('lc-connect-section').style.display=lc?'none':'block';
+  document.getElementById('lc-profile-section').style.display=lc?'block':'none';
+  if(!lc)return;
+
+  document.getElementById('lc-realname').textContent=lc.realName||lc.username;
+  document.getElementById('lc-handle').textContent='@'+lc.username;
+  document.getElementById('lc-ranking').textContent='Ranking: '+(lc.ranking?'#'+lc.ranking.toLocaleString():'unranked');
+  document.getElementById('lcp-total').textContent=lc.stats.total;
+  document.getElementById('lcp-easy').textContent=lc.stats.easy;
+  document.getElementById('lcp-med').textContent=lc.stats.med;
+  document.getElementById('lcp-hard').textContent=lc.stats.hard;
+
+  const mc=lc.matchedCount||0;
+  const total=APP.questions.length;
+  document.getElementById('lc-matched-info').innerHTML=
+    `<strong style="color:#c4b5fd">${mc}</strong> of your LeetCode solved problems matched questions in this tracker (out of ${total} tracked). `+
+    (mc>0?`Matched problems have been automatically marked as Solved with a 🟧 badge.`:'Sync to match your solved problems.');
+
+  const ls=lc.lastSync?'Last synced: '+new Date(lc.lastSync).toLocaleString():'Never synced';
+  document.getElementById('lc-last-sync').textContent=ls;
+  document.getElementById('lc-page-sub').textContent='Connected as @'+lc.username+' · '+ls;
+
+  // Recent AC list
+  const acList=document.getElementById('lc-solved-list');
+  if(!lc.recentAC||!lc.recentAC.length){
+    acList.innerHTML='<div style="color:var(--text3);font-size:13px;padding:8px 0">Click Re-sync to load</div>';
+  }else{
+    acList.innerHTML='<div class="lc-solved-title">'+lc.recentAC.length+' recent accepted submissions</div><div class="lc-tag-wrap">'+
+      lc.recentAC.map(s=>{
+        const matched=matchLCSlug(s.titleSlug);
+        const url='https://leetcode.com/problems/'+s.titleSlug+'/';
+        const date=new Date(parseInt(s.timestamp)*1000).toLocaleDateString();
+        return`<span class="lc-solved-chip" onclick="window.open('${url}','_blank')">
+          <span class="num">#${s.id}</span>
+          ${s.title}
+          ${matched?'<span class="lc-matched-badge" style="font-size:9px;padding:1px 5px">✓ tracked</span>':''}
+          <span style="color:var(--text3);font-size:9px">${date}</span>
+        </span>`;
+      }).join('')+'</div>';
+  }
+
+  // Matched tracker problems
+  const matchedEl=document.getElementById('lc-matched-list');
+  const prog=APP.progress[uid]||{};
+  const lcSolvedQs=APP.questions.filter(q=>prog[q.id]&&prog[q.id].lcSynced&&prog[q.id].status==='Solved');
+  if(!lcSolvedQs.length){
+    matchedEl.innerHTML='<div style="color:var(--text3);font-size:13px;padding:4px 0">No matches yet — sync to find matches</div>';
+  }else{
+    matchedEl.innerHTML='<div class="lc-solved-title">'+lcSolvedQs.length+' tracker problems solved via LeetCode</div>'+
+      lcSolvedQs.map(q=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="font-size:11px;color:var(--text3);font-family:monospace;width:30px">${q.num||''}</span>
+          <a href="${q.url}" target="_blank" style="flex:1;font-size:13px;color:var(--text2)">${q.title}</a>
+          <span class="diff-badge ${q.difficulty}">${q.difficulty}</span>
+          <span class="badge badge-orange">🟧 LC</span>
+        </div>`).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER: SIDEBAR
+// ═══════════════════════════════════════════════════════════
+function renderSidebar(srcQ){
+  const uid=APP.activeUserId;
+  const subEl=document.getElementById('rec-sub');
+  const srcEl=document.getElementById('rec-source');
+  const listEl=document.getElementById('rec-list');
+  let recs=[];
+  if(srcQ){
+    subEl.textContent='Similar to selected problem';
+    srcEl.style.display='block';
+    srcEl.innerHTML=`<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Based on</div>
+      <strong style="font-size:12px;color:var(--text2)">${srcQ.title}</strong>
+      <div style="margin-top:4px;display:flex;gap:6px;align-items:center">
+        <span style="font-size:10px;color:var(--text3)">${srcQ.topic}</span>
+        <span class="diff-badge ${srcQ.difficulty}" style="font-size:9px">${srcQ.difficulty}</span>
+      </div>`;
+    recs=getRecommendations(uid,srcQ.id);
+  }else{
+    subEl.textContent='Personalised picks based on your progress';
+    srcEl.style.display='none';
+    recs=getDailyRecs(uid).recs;
+  }
+  if(!recs.length){
+    listEl.innerHTML=`<div style="text-align:center;padding:28px 0;color:var(--text3)"><div style="font-size:26px;margin-bottom:8px">🎉</div><div style="font-size:12px">You've solved everything similar!</div></div>`;
+    return;
+  }
+  listEl.innerHTML=recs.map((q,i)=>`
+    <div class="rec-card" onclick="window.open('${q.url||'#'}','_blank')">
+      <div class="rec-card-n">#${i+1} Recommendation</div>
+      <div class="rec-card-t">${q.title}</div>
+      <div class="rec-card-m">
+        <span style="font-size:10px;color:var(--text3)">${q.topic}</span>
+        <span class="diff-badge ${q.difficulty}" style="font-size:9px">${q.difficulty}</span>
+        ${(q.tags||[]).slice(0,2).map(t=>`<span class="qtag">${t}</span>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER: SETTINGS
+// ═══════════════════════════════════════════════════════════
+function renderSettings(){
+  const uid=APP.activeUserId;
+  const u=getUser(uid);
+  document.getElementById('edit-uname').value=u.username||'';
+  document.getElementById('edit-email').value=u.email||'';
+  document.getElementById('notif-toggle').checked=u.notification!==false;
+  document.getElementById('user-list').innerHTML=APP.users.map(usr=>`
+    <div class="user-chip ${usr.id===uid?'active':''}" onclick="switchUser('${usr.id}')">
+      ${usr.username}
+      ${APP.leetcode[usr.id]?'<span style="font-size:9px;color:var(--lc-orange)"> 🟧</span>':''}
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INTERACTION HANDLERS
+// ═══════════════════════════════════════════════════════════
+function cycleStatus(uid,qid){
+  const cur=getProgress(uid,qid).status||'Todo';
+  const next={'Todo':'In Progress','In Progress':'Solved','Solved':'Todo'}[cur];
+  setProgress(uid,qid,{status:next,lcSynced:false});
+  renderProblems();renderDashboard();
+  showToast(next==='Solved'?'✨ Marked Solved!':next==='In Progress'?'▶ Started!':'↺ Reset to Todo','success');
+}
+function toggleTopic(t){openTopics[t]=!openTopics[t];renderProblems();}
+function toggleNotes(qid){openNotes[qid]=!openNotes[qid];renderProblems();}
+function saveNote(uid,qid){
+  const val=document.getElementById('note-'+qid).value;
+  setProgress(uid,qid,{notes:val});
+  openNotes[qid]=false;
+  renderProblems();showToast('Notes saved!','success');
+}
+function selectRec(qid){
+  activeRecQId=activeRecQId===qid?null:qid;
+  renderSidebar(activeRecQId?APP.questions.find(q=>q.id===activeRecQId):null);
+  renderProblems();
+}
+function setFilter(type,val,btn){
+  filters[type]=val;
+  btn.closest('.btn-group').querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderProblems();
+}
+function switchUser(id){
+  APP.activeUserId=id;save();
+  renderSettings();renderDashboard();
+  const lc=getLCData(id);
+  document.getElementById('lc-nav-badge').style.display=lc?'inline':'none';
+  showToast('Switched to '+getUser(id).username,'success');
+}
+function createUser(){
+  const uname=document.getElementById('new-uname').value.trim();
+  const email=document.getElementById('new-email').value.trim();
+  if(!uname||!email){showToast('Username and email required','error');return;}
+  if(APP.users.find(u=>u.email===email)){showToast('Email already exists','error');return;}
+  const nu={id:'u'+Date.now(),username:uname,email,notification:true,streak:{current:0,longest:0,lastDate:null}};
+  APP.users.push(nu);APP.activeUserId=nu.id;save();
+  document.getElementById('new-uname').value='';document.getElementById('new-email').value='';
+  renderSettings();renderDashboard();showToast('User "'+uname+'" created!','success');
+}
+function saveProfile(){
+  const uid=APP.activeUserId;const u=getUser(uid);
+  u.username=document.getElementById('edit-uname').value.trim()||u.username;
+  u.email=document.getElementById('edit-email').value.trim()||u.email;
+  u.notification=document.getElementById('notif-toggle').checked;
+  save();renderSettings();renderDashboard();showToast('Profile saved!','success');
+}
+function openAddModal(){document.getElementById('add-modal').classList.add('open');}
+function closeAddModal(){document.getElementById('add-modal').classList.remove('open');}
+function addQuestion(){
+  const title=document.getElementById('m-title').value.trim();
+  const topic=document.getElementById('m-topic').value;
+  const diff=document.getElementById('m-diff').value;
+  const url=document.getElementById('m-url').value.trim();
+  const platform=document.getElementById('m-platform').value;
+  const num=parseInt(document.getElementById('m-num').value)||null;
+  const tags=(document.getElementById('m-tags').value||'').split(',').map(t=>t.trim()).filter(Boolean);
+  if(!title||!topic||!diff){showToast('Title, topic and difficulty required','error');return;}
+  APP.questions.push({id:'cq'+Date.now(),title,topic,difficulty:diff,url:url||'#',platform,tags,num,slug:''});
+  save();closeAddModal();
+  ['m-title','m-url','m-tags','m-num'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('m-topic').value='';document.getElementById('m-diff').value='';
+  renderProblems();renderDashboard();showToast('Problem added!','success');
+}
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+type;
+  setTimeout(()=>t.classList.add('show'),10);
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+document.getElementById('add-modal').addEventListener('click',function(e){if(e.target===this)closeAddModal();});
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+loadData();
+const initLC=getLCData(APP.activeUserId);
+if(initLC)document.getElementById('lc-nav-badge').style.display='inline';
+renderDashboard();
+renderSidebar(null);
+</script>
+</body>
+</html>
