@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-easy: #10b981;
+  --color-medium: #f59e0b;
+  --color-hard: #ef4444;
+
+  --animate-fadeIn: fadeIn 0.3s ease-out;
+  --animate-slideIn: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-zoomIn: zoomIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideIn {
+    from { transform: translateY(100%) translateY(24px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes zoomIn {
+    from { transform: scale(0.96); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+/* Theme configurations */
+:root {
+  color-scheme: light;
+}
+.dark {
+  color-scheme: dark;
+}
+
+/* Pulse / Spin Animation helpers */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.dark .glass {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Base custom styles */
+body {
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+.diff-easy {
+  color: var(--color-easy);
+  background-color: rgba(16, 185, 129, 0.1);
+}
+.diff-medium {
+  color: var(--color-medium);
+  background-color: rgba(245, 158, 11, 0.1);
+}
+.diff-hard {
+  color: var(--color-hard);
+  background-color: rgba(239, 68, 68, 0.1);
+}

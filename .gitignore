@@ -1,0 +1,23 @@
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Local databases & binaries
+mongodb-bin/
+mongodb-data/
+
+# Environment files
+.env
+*.env
+backend/.env
+
+# Build outputs
+dist/
+client/dist/
+
+# OS/System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
