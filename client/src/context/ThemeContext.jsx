@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { applyTheme } from '../utils/theme.js';
 
 const ThemeContext = createContext();
 
@@ -13,14 +14,7 @@ export const ThemeProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    const root = window.document.documentElement;
-    if (darkMode) {
-      root.classList.add('dark');
-      localStorage.setItem('dsa_tracker_theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('dsa_tracker_theme', 'light');
-    }
+    applyTheme(darkMode);
   }, [darkMode]);
 
   const toggleTheme = () => {
