@@ -6,6 +6,12 @@ Previously a standalone HTML page, this project has been elevated into a modern 
 
 ---
 
+## 🌐 Live Production Links
+- **Live Demo (Frontend)**: [https://dsa-tracker-nu-murex.vercel.app](https://dsa-tracker-nu-murex.vercel.app)
+- **API Server (Backend)**: [https://dsa-tracker-glt2.onrender.com](https://dsa-tracker-glt2.onrender.com)
+
+---
+
 ## 🏗️ Technical Architecture
 
 The project is structured into three main layers:
